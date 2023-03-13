@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from dotenv import load_dotenv
 from os import environ
+from marshmallow import post_load, fields, ValidationError
 
 load_dotenv()
 
@@ -23,11 +24,22 @@ CORS(app)
 Migrate(app, db)
 
 # Models
+class MusicLibrary(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    title = db.Column(db.String(255), nullable = False)
+    artist = db.Column(db.String(255), nullable = False)
+    album = db.Column(db.String(255), nullable = False)
+    release_date = db.Column(db.Datetime)
+    genre = db.Column(db.String(255))
 
-
+    def __repr__(self):
+        return f'{self.title} {self.artist} {self.album} {self.release_date} {self.genre}'
 
 # Schemas
-
+class MusicLibrarySchema(ma.Schema):
+    id = fields.Integer(primary_key = True)
+    title = fields.String(required = True)
+    artist = fields.String()
 
 
 # Resources
