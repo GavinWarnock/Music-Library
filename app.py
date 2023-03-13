@@ -29,7 +29,7 @@ class MusicLibrary(db.Model):
     title = db.Column(db.String(255), nullable = False)
     artist = db.Column(db.String(255), nullable = False)
     album = db.Column(db.String(255), nullable = False)
-    release_date = db.Column(db.Datetime)
+    release_date = db.Column(db.Date)
     genre = db.Column(db.String(255))
 
     def __repr__(self):
@@ -39,8 +39,16 @@ class MusicLibrary(db.Model):
 class MusicLibrarySchema(ma.Schema):
     id = fields.Integer(primary_key = True)
     title = fields.String(required = True)
-    artist = fields.String()
+    artist = fields.String(required = True)
+    album = fields.String(required = True)
+    release_date = fields.Date()
+    genre = fields.String()
 
+class Meta:
+    fields = ("id", "title", "artist", "album", "release_date", "genre")
+
+@post_load
+def create
 
 # Resources
 
