@@ -59,12 +59,23 @@ songs_schema = SongSchema(many = True)
 class SongListResource(Resource):
     def get(self):
         all_songs = MusicLibrary.query.all()
-        return song_schema.dump(all_songs), 200
+        return songs_schema.dump(all_songs), 200
     
     def post(self):
         form_data = request.get_json()
         try:
             new_song = song_schema.load(form_data)
             db.session.add(new_song)
+            db.session.commit()
+            return song_schema.dump(new_song), 201
+        except ValidationError as err:
+            return err.messages, 400
+
+class SongResource(Resource):
+    def get (self, song_id):
+        song_from_db = MusicLibrary.query.get_or_404(song_id)
+        return song_schema.dump(song_from_db)
+    
+
 
 # Routes
