@@ -76,6 +76,26 @@ class SongResource(Resource):
         song_from_db = MusicLibrary.query.get_or_404(song_id)
         return song_schema.dump(song_from_db)
     
+    def delete(self, song_id):
+        song_from_db = MusicLibrary.query.get_or_404(song_id)
+        db.session.delete(song_from_db)
+        return "", 204
 
-
+    def put(self, song_id):
+        song_from_db = MusicLibrary.query.get_or_404(song_id)
+        if 'title' in request.json:
+            song_from_db.title = request.json['title']
+        if 'artist' in request.json:
+            song_from_db.artist = request.json['artist']
+        if 'album' in request.json:
+            song_from_db.album = request.json['album']
+        if 'release_date' in request.json:
+            song_from_db.release_date = request.json['release_date']
+        if 'genre' in request.json:
+            song_from_db.genre = request.json['genre']
+        db.session.commit()
+        return song_schema.dump(song_from_db), 200
+    
 # Routes
+api.add_resource(SongListResource, '/api/songs')
+api.add_resource(SongResource, '/api/songs/<int:pk>')
