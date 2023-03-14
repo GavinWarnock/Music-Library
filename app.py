@@ -36,7 +36,7 @@ class MusicLibrary(db.Model):
         return f'{self.title} {self.artist} {self.album} {self.release_date} {self.genre}'
 
 # Schemas
-class MusicLibrarySchema(ma.Schema):
+class SongSchema(ma.Schema):
     id = fields.Integer(primary_key = True)
     title = fields.String(required = True)
     artist = fields.String(required = True)
@@ -44,14 +44,27 @@ class MusicLibrarySchema(ma.Schema):
     release_date = fields.Date()
     genre = fields.String()
 
-class Meta:
-    fields = ("id", "title", "artist", "album", "release_date", "genre")
+    class Meta:
+        fields = ("id", "title", "artist", "album", "release_date", "genre")
 
-@post_load
-def create
+    @post_load
+    def create_song(self, data, **kwargs):
+        return MusicLibrary(**data)
+
+song_schema = SongSchema()
+songs_schema = SongSchema(many = True)
 
 # Resources
 
-
+class SongListResource(Resource):
+    def get(self):
+        all_songs = MusicLibrary.query.all()
+        return song_schema.dump(all_songs), 200
+    
+    def post(self):
+        form_data = request.get_json()
+        try:
+            new_song = song_schema.load(form_data)
+            db.session.add(new_song)
 
 # Routes
