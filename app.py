@@ -24,16 +24,17 @@ CORS(app)
 Migrate(app, db)
 
 # Models
-class MusicLibrary(db.Model):
+class Song(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     title = db.Column(db.String(255), nullable = False)
     artist = db.Column(db.String(255), nullable = False)
     album = db.Column(db.String(255), nullable = False)
     release_date = db.Column(db.Date)
     genre = db.Column(db.String(255))
+    running_time = db.Column(db.Integer)
 
     def __repr__(self):
-        return f'{self.title} {self.artist} {self.album} {self.release_date} {self.genre}'
+        return f'{self.title} {self.artist} {self.album} {self.release_date} {self.genre} {self.running_time}'
 
 # Schemas
 class SongSchema(ma.Schema):
@@ -43,13 +44,14 @@ class SongSchema(ma.Schema):
     album = fields.String(required = True)
     release_date = fields.Date()
     genre = fields.String()
+    running_time = fields.Integer()
 
     class Meta:
-        fields = ("id", "title", "artist", "album", "release_date", "genre")
+        fields = ("id", "title", "artist", "album", "release_date", "genre", "running_time")
 
     @post_load
     def create_song(self, data, **kwargs):
-        return MusicLibrary(**data)
+        return Song(**data)
 
 song_schema = SongSchema()
 songs_schema = SongSchema(many = True)
@@ -58,8 +60,13 @@ songs_schema = SongSchema(many = True)
 
 class SongListResource(Resource):
     def get(self):
-        all_songs = MusicLibrary.query.all()
-        return songs_schema.dump(all_songs), 200
+        all_songs = Song.query.all()
+        total_run_time = sum(song.running_time for song in all_songs)
+        custom_response = {
+            'songs': songs_schema.dump(all_songs),
+            'total_run_time': round(float(total_run_time), 2)
+        }
+        return custom_response, 200
     
     def post(self):
         form_data = request.get_json()
@@ -73,16 +80,16 @@ class SongListResource(Resource):
 
 class SongResource(Resource):
     def get (self, song_id):
-        song_from_db = MusicLibrary.query.get_or_404(song_id)
+        song_from_db = Song.query.get_or_404(song_id)
         return song_schema.dump(song_from_db)
     
     def delete(self, song_id):
-        song_from_db = MusicLibrary.query.get_or_404(song_id)
+        song_from_db = Song.query.get_or_404(song_id)
         db.session.delete(song_from_db)
         return "", 204
 
     def put(self, song_id):
-        song_from_db = MusicLibrary.query.get_or_404(song_id)
+        song_from_db = Song.query.get_or_404(song_id)
         if 'title' in request.json:
             song_from_db.title = request.json['title']
         if 'artist' in request.json:
@@ -93,9 +100,11 @@ class SongResource(Resource):
             song_from_db.release_date = request.json['release_date']
         if 'genre' in request.json:
             song_from_db.genre = request.json['genre']
+        if 'running_time' in request.json:
+            song_from_db.running_time = request.json['running_time']
         db.session.commit()
         return song_schema.dump(song_from_db), 200
     
 # Routes
 api.add_resource(SongListResource, '/api/songs')
-api.add_resource(SongResource, '/api/songs/<int:pk>')
+api.add_resource(SongResource, '/api/songs/<int:song_id>')
